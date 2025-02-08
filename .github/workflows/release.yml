@@ -44,14 +44,3 @@ jobs:
           updateOnlyUnreleased: true
           allowUpdates: true
           skipIfReleaseExists: true
-
-      - name: create release for push
-        uses: ncipollo/release-action@v1
-        if: ${{ steps.changelog.outputs.skipped == 'false' && github.event_name == 'push' }}
-        with:
-          token: ${{ secrets.CHANGELOG_RELEASE }}
-          tag: ${{ steps.changelog.outputs.tag }}
-          body: ${{ steps.changelog.outputs.clean_changelog }}
-          updateOnlyUnreleased: true
-          allowUpdates: true
-          skipIfReleaseExists: true
