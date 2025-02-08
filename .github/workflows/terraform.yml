@@ -1,4 +1,10 @@
 name: Terraform Validation
+
+# Ensure only one workflow runs at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
 
@@ -9,6 +15,11 @@ on:
 permissions:
   contents: write
   pull-requests: write
+
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: "3.12"
+  TERRAFORM_VERSION: "1.10.0"
 
 jobs:
   changes:
@@ -21,26 +32,44 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: echo "should_release=true" >> $GITHUB_OUTPUT
 
-  validate-modules:
+  terraform-plan:
+    name: Terraform Plan
     needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          terraform_version: "1.10.0"
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+          audience: sts.amazonaws.com
+          
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Format
+        working-directory: examples/basic-usage
+        run: terraform fmt -check -recursive
+
       - name: Terraform Init
         working-directory: examples/basic-usage
-        run: terraform init -backend=false
+        run: terraform init
+
       - name: Terraform Validate
         working-directory: examples/basic-usage
         run: terraform validate
-      - name: Terraform plan
+
+      - name: Terraform Plan
         working-directory: examples/basic-usage
-        run: terraform plan -no-color -out=tfplan
+        run: terraform plan -no-color
 
   trigger-release:
-    needs: [changes, validate-modules]
+    needs: [changes, terraform-plan]
     if : ${{ needs.changes.outputs.should_release == 'true' }}
     uses: ./.github/workflows/release.yml
     secrets:
