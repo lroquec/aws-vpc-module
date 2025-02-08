@@ -30,6 +30,7 @@ jobs:
         with:
           terraform_version: "1.10.0"
       - name: Terraform Init
+        working-directory: examples/basic-usage
         run: terraform init -backend=false
       - name: Terraform Validate
         run: terraform validate
@@ -41,4 +42,4 @@ jobs:
     if : ${{ needs.changes.outputs.should_release == 'true' }}
     uses: ./.github/workflows/release.yml
     secrets:
-      TOKEN: ${{ secrets.CHANGELOG_RELEASE }}
+      TOKEN: ${{ secrets.GITHUB_TOKEN }}
