@@ -33,8 +33,10 @@ jobs:
         working-directory: examples/basic-usage
         run: terraform init -backend=false
       - name: Terraform Validate
+        working-directory: examples/basic-usage
         run: terraform validate
       - name: Terraform plan
+        working-directory: examples/basic-usage
         run: terraform plan -no-color -out=tfplan
 
   trigger-release:
