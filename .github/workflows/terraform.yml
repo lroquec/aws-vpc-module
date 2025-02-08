@@ -34,7 +34,7 @@ jobs:
         run: echo "should_release=true" >> $GITHUB_OUTPUT
 
   terraform-plan:
-    name: Terraform Plan
+    name: terraform
     needs: changes
     runs-on: ubuntu-latest
     steps:
@@ -48,24 +48,24 @@ jobs:
           role-session-name: GitHubActions-${{ github.run_id }}
           audience: sts.amazonaws.com
           
-      - name: Setup Terraform
+      - name: setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Format
+      - name: terraform Format
         working-directory: examples/basic-usage
         run: terraform fmt -check -recursive
 
-      - name: Terraform Init
+      - name: terraform Init
         working-directory: examples/basic-usage
         run: terraform init
 
-      - name: Terraform Validate
+      - name: terraform Validate
         working-directory: examples/basic-usage
         run: terraform validate
 
-      - name: Terraform Plan
+      - name: terraform Plan
         working-directory: examples/basic-usage
         run: terraform plan -no-color
 
