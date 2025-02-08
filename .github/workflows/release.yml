@@ -1,0 +1,57 @@
+name: Reusable Release Workflow
+
+on:
+  workflow_call:
+    secrets:
+      TOKEN:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: conventional Changelog Action
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v6.0.0
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          skip-version-file: true
+
+      # - name: create release
+      #   uses: actions/create-release@main
+      #   if: ${{ steps.changelog.outputs.skipped == 'false' }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.changelog.outputs.tag }}
+      #     release_name: ${{ steps.changelog.outputs.tag }}
+      #     body: ${{ steps.changelog.outputs.clean_changelog }}
+
+      - name: create release for workflow_call
+        uses: ncipollo/release-action@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' && github.event_name == 'workflow_call' }}
+        with:
+          token: ${{ secrets.TOKEN }}
+          tag: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+          updateOnlyUnreleased: true
+          allowUpdates: true
+          skipIfReleaseExists: true
+
+      - name: create release for push
+        uses: ncipollo/release-action@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' && github.event_name == 'push' }}
+        with:
+          token: ${{ secrets.CHANGELOG_RELEASE }}
+          tag: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+          updateOnlyUnreleased: true
+          allowUpdates: true
+          skipIfReleaseExists: true
