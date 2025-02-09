@@ -10,6 +10,17 @@ variable "project_name" {
   default     = "test-project"
 }
 
+variable "git_repo" {
+  description = "Git repo for consumer APP"
+  type        = string
+  default     = "https://github.com/lroquec/devops-simple"
+}
+
+variable "accountable" {
+  description = "Name of the team accountable for the project"
+  type        = string
+  default     = "devops-team"
+}
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
   type        = string
@@ -47,9 +58,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-# variable "region" {
-#   description = "AWS region"
-#   type        = string
-#   default     = "us-east-1"
-# }
