@@ -1,5 +1,5 @@
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
 }
 
 terraform {
@@ -7,10 +7,27 @@ terraform {
 }
 
 module "vpc" {
-  source            = "../../"
-  environment       = var.environment
-  project_name      = var.project_name
-  vpc_cidr          = var.vpc_cidr
-  vpc_subnet_config = var.vpc_subnet_config
-  tags              = var.tags
+  source       = "../../"
+  environment  = "dev"
+  project_name = "test-project"
+  vpc_cidr     = "10.0.0.0/16"
+  vpc_subnet_config = {
+    subnet1 = {
+      cidr_block = "10.0.1.0/24"
+      public     = true
+    }
+    subnet2 = {
+      cidr_block = "10.0.2.0/24"
+      public     = true
+    }
+    subnet3 = {
+      cidr_block = "10.0.3.0/24"
+      public     = false
+    }
+    subnet4 = {
+      cidr_block = "10.0.4.0/24"
+      public     = false
+    }
+  }
+  tags = { "OtherTag" = "test-tag" }
 }
