@@ -36,7 +36,7 @@ jobs:
 
       - name: create release for workflow_call
         uses: ncipollo/release-action@v1
-        if: ${{ steps.changelog.outputs.skipped == 'false' && github.event_name == 'workflow_call' }}
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
         with:
           token: ${{ secrets.TOKEN }}
           tag: ${{ steps.changelog.outputs.tag }}
