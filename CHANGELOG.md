@@ -1,3 +1,14 @@
+# [1.3.0](https://github.com/lroquec/aws-vpc-module/compare/v1.2.0...v1.3.0) (2025-02-09)
+
+
+### Features
+
+* Add complete example configuration with VPC, subnets, and outputs ([a296d5a](https://github.com/lroquec/aws-vpc-module/commit/a296d5a0838dc792412972c13bb36637b7cd64be))
+* Add support for database and elasticache subnets, and enable VPC Flow Logs ([183a004](https://github.com/lroquec/aws-vpc-module/commit/183a0040fd49cb6e3f0908e14c6072e2cb89de79))
+* Enhance Terraform workflow to dynamically handle multiple example directories ([5302a26](https://github.com/lroquec/aws-vpc-module/commit/5302a2664c7ab625a810036f620e5258cbcbc467))
+
+
+
 # [1.2.0](https://github.com/lroquec/aws-vpc-module/compare/v1.1.0...v1.2.0) (2025-02-09)
 
 
