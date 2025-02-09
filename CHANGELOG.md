@@ -1,3 +1,12 @@
+# [1.2.0](https://github.com/lroquec/aws-vpc-module/compare/v1.1.0...v1.2.0) (2025-02-09)
+
+
+### Features
+
+* Simplify release condition in workflow by removing event check for workflow_call ([44b9a37](https://github.com/lroquec/aws-vpc-module/commit/44b9a371f8aea3ec96a04678836eee8b5bf6cc1e))
+
+
+
 # [1.1.0](https://github.com/lroquec/aws-vpc-module/compare/v1.0.0...v1.1.0) (2025-02-09)
 
 
