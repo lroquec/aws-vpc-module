@@ -15,6 +15,8 @@ locals {
     {
       Environment = var.environment
       ManagedBy   = "terraform"
+      Accountable = var.accountable
+      Repo       = var.git_repo
     }
   )
 }
