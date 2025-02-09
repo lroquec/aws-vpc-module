@@ -33,10 +33,24 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: echo "should_release=true" >> $GITHUB_OUTPUT
 
-  terraform-plan:
-    name: terraform
-    needs: changes
+  get-examples:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          DIRS=$(find examples -maxdepth 1 -mindepth 1 -type d | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=${DIRS}" >> $GITHUB_OUTPUT
+      
+  terraform-plan:
+    name: terraform-${{ matrix.directory }}
+    needs: [changes, get-examples]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.get-examples.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,19 +68,19 @@ jobs:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: terraform Format
-        working-directory: examples/basic-usage
+        working-directory: ${{ matrix.directory }}
         run: terraform fmt -check -recursive
 
       - name: terraform Init
-        working-directory: examples/basic-usage
+        working-directory: ${{ matrix.directory }}
         run: terraform init
 
       - name: terraform Validate
-        working-directory: examples/basic-usage
+        working-directory: ${{ matrix.directory }}
         run: terraform validate
 
       - name: terraform Plan
-        working-directory: examples/basic-usage
+        working-directory: ${{ matrix.directory }}
         run: terraform plan -no-color
 
   trigger-release:

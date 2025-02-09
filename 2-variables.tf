@@ -58,3 +58,49 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "create_database_subnets" {
+  description = "Whether to create database subnets"
+  type        = bool
+  default     = false
+}
+
+variable "create_elasticache_subnets" {
+  description = "Whether to create elasticache subnets"
+  type        = bool
+  default     = false
+}
+
+variable "enable_flow_log" {
+  description = "Whether to enable VPC Flow Logs"
+  type        = bool
+  default     = false
+}
+
+variable "default_security_group_ingress" {
+  description = "List of ingress rules for default security group"
+  type        = list(map(string))
+  default = [
+    {
+      from_port   = "0"
+      to_port     = "0"
+      protocol    = "-1"
+      cidr_blocks = "10.0.0.0/8"
+      description = "Allow all internal traffic"
+    }
+  ]
+}
+
+variable "default_security_group_egress" {
+  description = "List of egress rules for default security group"
+  type        = list(map(string))
+  default = [
+    {
+      from_port   = "0"
+      to_port     = "0"
+      protocol    = "-1"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow all outbound traffic"
+    }
+  ]
+}
