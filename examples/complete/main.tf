@@ -7,7 +7,7 @@ terraform {
 }
 
 module "vpc" {
-  source       = "../../"
+  source       = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v1.4.0"
   environment  = "prod"
   project_name = "ecommerce"
   accountable  = "platform-team"
