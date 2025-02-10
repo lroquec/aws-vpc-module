@@ -7,7 +7,8 @@ terraform {
 }
 
 module "vpc" {
-  source       = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v1.4.0"
+  source       = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v1.5.0"  # Use remote module
+  # source       = "../../" # Use local module
   environment  = "prod"
   project_name = "ecommerce"
   accountable  = "platform-team"
@@ -15,23 +16,8 @@ module "vpc" {
 
   vpc_cidr = "10.100.0.0/16"
 
-  vpc_subnet_config = {
-    public1 = {
-      cidr_block = "10.100.1.0/24"
-      public     = true
-    }
-    public2 = {
-      cidr_block = "10.100.2.0/24"
-      public     = true
-    }
-    private1 = {
-      cidr_block = "10.100.10.0/24"
-    }
-    private2 = {
-      cidr_block = "10.100.11.0/24"
-    }
-  }
-
+  create_public_subnets      = true
+  create_private_subnets     = true
   create_database_subnets    = true
   create_elasticache_subnets = true
   enable_flow_log            = true

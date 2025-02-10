@@ -3,17 +3,27 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  public_subnets_cidr  = [for k, v in var.vpc_subnet_config : v.cidr_block if v.public]
-  private_subnets_cidr = [for k, v in var.vpc_subnet_config : v.cidr_block if !v.public]
-  num_azs_needed       = max(length(local.public_subnets_cidr), length(local.private_subnets_cidr))
+  # Get 3 availability zones
+  azs = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  available_azs = data.aws_availability_zones.available.names
+  # Calculate subnet CIDRs based on VPC CIDR
+  public_subnet_cidrs = var.create_public_subnets ? [
+    for i in range(3) : cidrsubnet(var.vpc_cidr, 8, i)
+  ] : []
 
-  azs = [for i in range(local.num_azs_needed) : element(local.available_azs, i)]
+  private_subnet_cidrs = var.create_private_subnets ? [
+    for i in range(3) : cidrsubnet(var.vpc_cidr, 7, i + 16)
+  ] : []
 
-  database_subnets    = var.create_database_subnets ? [for i in range(2) : cidrsubnet(var.vpc_cidr, 8, i + 10)] : []
-  elasticache_subnets = var.create_elasticache_subnets ? [for i in range(2) : cidrsubnet(var.vpc_cidr, 8, i + 20)] : []
+  database_subnet_cidrs = var.create_database_subnets ? [
+    for i in range(3) : cidrsubnet(var.vpc_cidr, 10, i + 128)
+  ] : []
 
+  elasticache_subnet_cidrs = var.create_elasticache_subnets ? [
+    for i in range(3) : cidrsubnet(var.vpc_cidr, 10, i + 144)
+  ] : []
+
+  # Common tags for all resources
   common_tags = merge(
     var.tags,
     {
@@ -27,22 +37,22 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  version = "5.18.1"
 
   name = "${var.environment}-${var.project_name}-vpc"
   cidr = var.vpc_cidr
 
   azs             = local.azs
-  private_subnets = local.private_subnets_cidr
-  public_subnets  = local.public_subnets_cidr
+  public_subnets  = local.public_subnet_cidrs
+  private_subnets = local.private_subnet_cidrs
 
-  enable_nat_gateway   = true
+  database_subnets    = local.database_subnet_cidrs
+  elasticache_subnets = local.elasticache_subnet_cidrs
+
+  enable_nat_gateway   = var.create_private_subnets
   single_nat_gateway   = var.environment != "prod"
   enable_dns_hostnames = true
   enable_dns_support   = true
-
-  database_subnets    = local.database_subnets
-  elasticache_subnets = local.elasticache_subnets
 
   map_public_ip_on_launch = true
 
@@ -53,17 +63,10 @@ module "vpc" {
   default_security_group_ingress = var.default_security_group_ingress
   default_security_group_egress  = var.default_security_group_egress
 
-  public_subnet_tags = {
-    "kubernetes.io/role/elb"                    = 1
-    "kubernetes.io/cluster/${var.project_name}" = "shared"
-  }
+  public_subnet_tags      = var.create_public_subnets ? var.public_subnet_tags : {}
+  private_subnet_tags     = var.create_private_subnets ? var.private_subnet_tags : {}
+  database_subnet_tags    = var.create_database_subnets ? var.database_subnet_tags : {}
+  elasticache_subnet_tags = var.create_elasticache_subnets ? var.elasticache_subnet_tags : {}
 
-  private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"           = 1
-    "kubernetes.io/cluster/${var.project_name}" = "shared"
-  }
-
-  tags = merge(
-    var.tags, local.common_tags
-  )
+  tags = local.common_tags
 }

@@ -27,36 +27,16 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "vpc_subnet_config" {
-  description = "Configuration for VPC subnets"
-  type = map(object({
-    cidr_block = string
-    public     = optional(bool, false)
-  }))
-  default = {
-    subnet1 = {
-      cidr_block = "10.0.1.0/24"
-      public     = true
-    }
-    subnet2 = {
-      cidr_block = "10.0.2.0/24"
-      public     = true
-    }
-    subnet3 = {
-      cidr_block = "10.0.3.0/24"
-      public     = false
-    }
-    subnet4 = {
-      cidr_block = "10.0.4.0/24"
-      public     = false
-    }
-  }
+variable "create_public_subnets" {
+  description = "Whether to create public subnets"
+  type        = bool
+  default     = true
 }
 
-variable "tags" {
-  description = "A map of tags to add to all resources"
-  type        = map(string)
-  default     = {}
+variable "create_private_subnets" {
+  description = "Whether to create private subnets"
+  type        = bool
+  default     = true
 }
 
 variable "create_database_subnets" {
@@ -69,6 +49,42 @@ variable "create_elasticache_subnets" {
   description = "Whether to create elasticache subnets"
   type        = bool
   default     = false
+}
+
+variable "public_subnet_tags" {
+  description = "Tags for public subnets"
+  type        = map(string)
+  default = {
+    "kubernetes.io/role/elb" = "1"
+    Type                     = "public"
+  }
+}
+
+variable "private_subnet_tags" {
+  description = "Tags for private subnets"
+  type        = map(string)
+  default = {
+    "kubernetes.io/role/internal-elb" = "1"
+    Type                              = "private"
+  }
+}
+
+variable "database_subnet_tags" {
+  description = "Tags for database subnets"
+  type        = map(string)
+  default     = {}
+}
+
+variable "elasticache_subnet_tags" {
+  description = "Tags for elasticache subnets"
+  type        = map(string)
+  default     = {}
+}
+
+variable "tags" {
+  description = "A map of tags to add to all resources"
+  type        = map(string)
+  default     = {}
 }
 
 variable "enable_flow_log" {
