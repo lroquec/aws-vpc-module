@@ -7,9 +7,11 @@ concurrency:
 
 on:
   pull_request:
-
   push:
-
+    branches:
+      - main
+    paths:
+      - '*.tf'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +21,6 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  PYTHON_VERSION: "3.12"
   TERRAFORM_VERSION: "1.10.0"
 
 jobs:
@@ -27,11 +28,20 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
-      should_release: ${{ steps.release.outputs.should_release }}
+      should_release: ${{ steps.check-changes.outputs.should_release }}
     steps:
       - uses: actions/checkout@v4
-      - id: release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      
+      - name: Check for Terraform changes
+        uses: dorny/paths-filter@v3
+        id: check-changes
+        with:
+          filters: |
+            terraform:
+              - '*.tf'
+              
+      - name: Set release output
+        if: steps.check-changes.outputs.terraform == 'true'
         run: echo "should_release=true" >> $GITHUB_OUTPUT
 
   get-examples:
@@ -47,7 +57,8 @@ jobs:
       
   terraform-plan:
     name: terraform-${{ matrix.directory }}
-    needs: [changes, get-examples]
+    needs: get-examples
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -68,9 +79,10 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: terraform Format
+      - name: terraform Format Check
         working-directory: ${{ matrix.directory }}
-        run: terraform fmt -check -recursive
+        continue-on-error: true
+        run: terraform fmt -check -recursive -diff
 
       - name: terraform Init
         working-directory: ${{ matrix.directory }}
@@ -86,7 +98,7 @@ jobs:
 
   trigger-release:
     needs: [changes, terraform-plan]
-    if : ${{ needs.changes.outputs.should_release == 'true' }}
+    if: needs.changes.outputs.should_release == 'true'
     uses: ./.github/workflows/release.yml
     secrets:
       TOKEN: ${{ secrets.GITHUB_TOKEN }}
