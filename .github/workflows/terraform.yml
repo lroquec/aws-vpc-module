@@ -58,7 +58,6 @@ jobs:
   terraform-plan:
     name: terraform-${{ matrix.directory }}
     needs: get-examples
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     strategy:
       matrix:
