@@ -29,6 +29,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
       should_release: ${{ steps.check-changes.outputs.should_release }}
+      fmt_status: ${{ steps.fmt.outputs.status }}
     steps:
       - uses: actions/checkout@v4
       
@@ -43,6 +44,15 @@ jobs:
       - name: Set release output
         if: steps.check-changes.outputs.terraform == 'true'
         run: echo "should_release=true" >> $GITHUB_OUTPUT
+
+      - name: Check Format
+        id: fmt
+        run: |
+          if terraform fmt -check -recursive; then
+            echo "status=clean" >> $GITHUB_OUTPUT
+          else
+            echo "status=needs-formatting" >> $GITHUB_OUTPUT
+          fi
 
   get-examples:
     runs-on: ubuntu-latest
@@ -99,5 +109,7 @@ jobs:
     needs: [changes, terraform-plan]
     if: needs.changes.outputs.should_release == 'true'
     uses: ./.github/workflows/release.yml
+    with:
+      fmt_status: ${{ needs.changes.outputs.fmt_status }}
     secrets:
       TOKEN: ${{ secrets.GITHUB_TOKEN }}
