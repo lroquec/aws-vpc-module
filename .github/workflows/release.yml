@@ -58,18 +58,21 @@ jobs:
           skipIfReleaseExists: true
 
       - name: Create Git Tag
+        id: create_tag
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
         run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
           git tag ${{ inputs.tag }}
           git push origin ${{ inputs.tag }}
+          echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
 
       - name: create manual release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
         uses: ncipollo/release-action@v1
-        if: ${{ github.event_name == 'workflow_dispatch' && (steps.changelog.outputs.skipped == 'false' || inputs.release_type != '') }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.changelog.outputs.tag }}
-          body: ${{ steps.changelog.outputs.clean_changelog }}
+          tag: ${{ inputs.tag }}
           updateOnlyUnreleased: true
           allowUpdates: true
           skipIfReleaseExists: true
