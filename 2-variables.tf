@@ -93,30 +93,11 @@ variable "enable_flow_log" {
   default     = false
 }
 
-variable "default_security_group_ingress" {
-  description = "List of ingress rules for default security group"
-  type        = list(map(string))
-  default = [
-    {
-      from_port   = "0"
-      to_port     = "0"
-      protocol    = "-1"
-      cidr_blocks = "10.0.0.0/8"
-      description = "Allow all internal traffic"
-    }
-  ]
-}
-
-variable "default_security_group_egress" {
-  description = "List of egress rules for default security group"
-  type        = list(map(string))
-  default = [
-    {
-      from_port   = "0"
-      to_port     = "0"
-      protocol    = "-1"
-      cidr_blocks = "0.0.0.0/0"
-      description = "Allow all outbound traffic"
-    }
-  ]
+variable "custom_ports" {
+  description = "List of custom ports to open in the default security group"
+  type        = map(any)
+  default = {
+    80  = ["0.0.0.0/0"]
+    443 = ["0.0.0.0/0"]
+  }
 }

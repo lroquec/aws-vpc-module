@@ -59,14 +59,35 @@ module "vpc" {
   enable_flow_log                                 = var.enable_flow_log
   flow_log_cloudwatch_log_group_retention_in_days = var.enable_flow_log ? 7 : 0
 
-  manage_default_security_group  = true
-  default_security_group_ingress = var.default_security_group_ingress
-  default_security_group_egress  = var.default_security_group_egress
+  manage_default_security_group = true
 
   public_subnet_tags      = var.create_public_subnets ? var.public_subnet_tags : {}
   private_subnet_tags     = var.create_private_subnets ? var.private_subnet_tags : {}
   database_subnet_tags    = var.create_database_subnets ? var.database_subnet_tags : {}
   elasticache_subnet_tags = var.create_elasticache_subnets ? var.elasticache_subnet_tags : {}
+
+  tags = local.common_tags
+}
+
+resource "aws_security_group" "default" {
+  vpc_id = module.vpc.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  dynamic "ingress" {
+    for_each = var.custom_ports
+    content {
+      from_port   = ingress.key
+      to_port     = ingress.key
+      protocol    = "tpc"
+      cidr_blocks = ingress.value
+    }
+  }
 
   tags = local.common_tags
 }
