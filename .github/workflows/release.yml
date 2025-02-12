@@ -57,9 +57,20 @@ jobs:
           allowUpdates: true
           skipIfReleaseExists: true
 
+      - name: Check if tag exists
+        id: check_tag
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+        run: |
+          if git rev-parse "${{ inputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag already exists"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        
       - name: Create Git Tag
         id: create_tag
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' && steps.check_tag.outputs.exists == 'false' }}
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
