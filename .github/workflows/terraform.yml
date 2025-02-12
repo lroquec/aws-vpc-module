@@ -76,7 +76,7 @@ jobs:
 
       - name: Run Terraform for each example
         run: |
-          for dir in $(echo ${{ steps.set-matrix.outputs.directories }} | jq -r '.[]'); do
+          for dir in $(echo '["examples/complete","examples/basic-usage"]' | jq -r '.[]'); do
             cd $dir
             terraform init
             terraform validate
