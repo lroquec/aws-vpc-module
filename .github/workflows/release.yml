@@ -11,6 +11,17 @@ on:
       TOKEN:
         required: true
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release (patch, minor, major)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - 'patch'
+          - 'minor'
+          - 'major'
+        default: ''
 
 permissions:
   contents: write
@@ -44,7 +55,7 @@ jobs:
 
       - name: create manual release
         uses: ncipollo/release-action@v1
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.changelog.outputs.skipped == 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && (steps.changelog.outputs.skipped == 'false' || inputs.release_type != '') }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.changelog.outputs.tag }}
