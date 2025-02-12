@@ -22,26 +22,6 @@ module "vpc" {
   create_elasticache_subnets = true
   enable_flow_log            = true
 
-  default_security_group_ingress = [
-    {
-      from_port   = "443"
-      to_port     = "443"
-      protocol    = "tcp"
-      cidr_blocks = "10.100.0.0/16"
-      description = "Internal HTTPS"
-    }
-  ]
-
-  default_security_group_egress = [
-    {
-      from_port   = "0"
-      to_port     = "0"
-      protocol    = "-1"
-      cidr_blocks = "0.0.0.0/0"
-      description = "Allow all outbound"
-    }
-  ]
-
   tags = {
     Project    = "ecommerce"
     CostCenter = "platform"
