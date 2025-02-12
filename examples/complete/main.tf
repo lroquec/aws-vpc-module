@@ -7,8 +7,8 @@ terraform {
 }
 
 module "vpc" {
-  source = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v2.0.0" # Use remote module
-  # source       = "../../" # Use local module
+  #source = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v2.0.0" # Use remote module
+  source       = "../../" # Use local module
   environment  = "prod"
   project_name = "ecommerce"
   accountable  = "platform-team"
