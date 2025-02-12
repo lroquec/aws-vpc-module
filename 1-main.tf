@@ -84,7 +84,7 @@ resource "aws_security_group" "default" {
     content {
       from_port   = ingress.key
       to_port     = ingress.key
-      protocol    = "tpc"
+      protocol    = "tcp"
       cidr_blocks = ingress.value
     }
   }
