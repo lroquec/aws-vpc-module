@@ -37,6 +37,7 @@ jobs:
         uses: dorny/paths-filter@v3
         id: check-changes
         with:
+          base: 'main'
           filters: |
             terraform:
               - '*.tf'
