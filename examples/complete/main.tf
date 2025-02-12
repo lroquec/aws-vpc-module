@@ -7,7 +7,7 @@ terraform {
 }
 
 module "vpc" {
-  source = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v1.5.0" # Use remote module
+  source = "git::https://github.com/lroquec/aws-vpc-module.git//?ref=v2.0.0" # Use remote module
   # source       = "../../" # Use local module
   environment  = "prod"
   project_name = "ecommerce"
@@ -21,6 +21,12 @@ module "vpc" {
   create_database_subnets    = true
   create_elasticache_subnets = true
   enable_flow_log            = true
+
+  custom_ports = {
+    22  = "139.47.126.204/32"
+    80  = "0.0.0.0/0"
+    443 = "0.0.0.0/0"
+  }
 
   tags = {
     Project    = "ecommerce"
