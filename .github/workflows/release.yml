@@ -22,7 +22,11 @@ on:
           - 'minor'
           - 'major'
         default: ''
-
+      tag:
+        description: 'Release tag (e.g. v1.5.1)'
+        required: false
+        type: string
+        default: ''
 permissions:
   contents: write
   pull-requests: write
@@ -52,6 +56,12 @@ jobs:
           updateOnlyUnreleased: true
           allowUpdates: true
           skipIfReleaseExists: true
+
+      - name: Create Git Tag
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+        run: |
+          git tag ${{ inputs.tag }}
+          git push origin ${{ inputs.tag }}
 
       - name: create manual release
         uses: ncipollo/release-action@v1
