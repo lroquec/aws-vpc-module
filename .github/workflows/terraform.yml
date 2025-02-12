@@ -24,15 +24,15 @@ env:
   TERRAFORM_VERSION: "1.10.0"
 
 jobs:
-  changes:
+  terraform-validation:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
-      should_release: ${{ steps.check-changes.outputs.should_release }}
+      should_release: ${{ steps.check-changes.outputs.terraform }}
       fmt_status: ${{ steps.fmt.outputs.status }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for Terraform changes
         uses: dorny/paths-filter@v3
         id: check-changes
@@ -40,40 +40,11 @@ jobs:
           filters: |
             terraform:
               - '*.tf'
-              
+
       - name: Set release output
+        id: set-release
         if: steps.check-changes.outputs.terraform == 'true'
         run: echo "should_release=true" >> $GITHUB_OUTPUT
-
-      - name: Check Format
-        id: fmt
-        run: |
-          if terraform fmt -check -recursive; then
-            echo "status=clean" >> $GITHUB_OUTPUT
-          else
-            echo "status=needs-formatting" >> $GITHUB_OUTPUT
-          fi
-
-  get-examples:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: set-matrix
-        run: |
-          DIRS=$(find examples -maxdepth 1 -mindepth 1 -type d | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=${DIRS}" >> $GITHUB_OUTPUT
-      
-  terraform-plan:
-    name: terraform-${{ matrix.directory }}
-    needs: get-examples
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        directory: ${{ fromJson(needs.get-examples.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -88,28 +59,36 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: terraform Format Check
-        working-directory: ${{ matrix.directory }}
-        continue-on-error: true
-        run: terraform fmt -check -recursive -diff
+      - name: Check Format
+        id: fmt
+        run: |
+          if terraform fmt -check -recursive; then
+            echo "status=clean" >> $GITHUB_OUTPUT
+          else
+            echo "status=needs-formatting" >> $GITHUB_OUTPUT
+          fi
 
-      - name: terraform Init
-        working-directory: ${{ matrix.directory }}
-        run: terraform init
+      - name: Get example directories
+        id: set-matrix
+        run: |
+          DIRS=$(find examples -maxdepth 1 -mindepth 1 -type d | jq -R -s -c 'split("\n")[:-1]')
+          echo "directories=${DIRS}" >> $GITHUB_OUTPUT
 
-      - name: terraform Validate
-        working-directory: ${{ matrix.directory }}
-        run: terraform validate
-
-      - name: terraform Plan
-        working-directory: ${{ matrix.directory }}
-        run: terraform plan -no-color
+      - name: Run Terraform for each example
+        run: |
+          for dir in $(echo ${{ steps.set-matrix.outputs.directories }} | jq -r '.[]'); do
+            cd $dir
+            terraform init
+            terraform validate
+            terraform plan -no-color
+            cd -
+          done
 
   trigger-release:
-    needs: [changes, terraform-plan]
-    if: needs.changes.outputs.should_release == 'true'
+    needs: terraform-validation
+    if: ${{ needs.terraform-validation.outputs.should_release }}
     uses: ./.github/workflows/release.yml
     with:
-      fmt_status: ${{ needs.changes.outputs.fmt_status }}
+      fmt_status: ${{ needs.terraform-validation.outputs.fmt_status }}
     secrets:
       TOKEN: ${{ secrets.GITHUB_TOKEN }}
