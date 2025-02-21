@@ -65,6 +65,7 @@ variable "private_subnet_tags" {
   type        = map(string)
   default = {
     "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role"              = "private"
     Type                              = "private"
   }
 }
